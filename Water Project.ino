@@ -14,25 +14,25 @@ Check Water level
 // Pin define
 #define GREEN_LED 23
 #define RED_LED 18
+#define WATER_SIWTCH 2 
 
 
 // WiFi credentials
-#define WIFI_SSID "Phone"         // Replace with your iPhone hotspot name
-#define WIFI_PASSWORD "Spiderman"  // Replace with your hotspot password
+#define WIFI_SSID "Phone" // Name of the wifi
+#define WIFI_PASSWORD "Spiderman" // Wifi password
 
-#define SMTP_HOST "smtp.gmail.com"                          // For Gmail
-#define SMTP_PORT 465                                       // SMTPS port
+#define SMTP_HOST "smtp.gmail.com"
+#define SMTP_PORT 465
 
 // Email credentials
-#define AUTHOR_EMAIL "esp32waterthing@gmail.com"                // Sender email address
-#define AUTHOR_PASSWORD "lbls clbf dlhd gseb"               // Sender application password 
-#define RECIPENT_EMAIL "esp32waterthing@gmail.com"          // Recipent email, password for gmail account 1password123
+#define AUTHOR_EMAIL "esp32waterthing@gmail.com" // Sender email address
+#define AUTHOR_PASSWORD "lbls clbf dlhd gseb" // Sender application password 
+#define RECIPENT_EMAIL "esp32waterthing@gmail.com" // Recipent email, password for gmail account 1password123
 
-/*
-For the subject and text field of what is sent to the Recipent's email
-*/
+// For the subject and text field of what is sent to the Recipent's email
 
 const char* SUBJECTS[] = {"⚠️⚠️⚠️ERROR⚠️⚠️⚠️", "Warning: Plant temperature out of range", "Warning: Low water level"};
+
 const char* TEXTS[] = {"ERROR occured 🦖, device has shutdown, manual fix required. Watch out for the dinosaur! 🦖", 
   "Plant's environment is too hot, this could damage the plant or kill the plant.", 
   "Plant's environment is too cold, this could damage the plant or kill the plant.", 
@@ -48,7 +48,7 @@ typedef enum {
 typedef enum {
     FULL,
     EMPTY
-} ResevoirState_t;
+} ReservoirState_t;
 
 // Create an SMTP session
 SMTPSession smtp;
@@ -59,13 +59,15 @@ void emailSend(String, String);
 void checkWaterLevel();
 void ledInit();
 void setLeds(ReservoirState_t state);
+void waterSwitchInit();
 
-// Setup function
+
 void setup() 
 {
   Serial.begin(115200);
   wifiStart(); // call the wifi start function
   ledInit();
+  void waterSwitchInit();
 }
 
 void loop()
@@ -74,7 +76,6 @@ void loop()
   delay(1200000); // Delay 20 minutes before updating
 }
 
-// Completed functions
 
 void wifiStart()
 {
@@ -156,7 +157,16 @@ void setLeds(ReservoirState_t state)
   }
 }
 
-void checkWaterLevel()
+void waterSwitchInit()
 {
+  pinMode(WATER_SWITCH, INPUT_PULLUP);
+}
 
+ReservoirState_t checkWaterLevel()
+{
+  if (digitalRead(WATER_SWITCH)) {
+    return EMPTY;
+  } else {
+    return FULL;
+  }
 }
