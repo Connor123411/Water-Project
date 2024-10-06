@@ -1,8 +1,6 @@
 #include <WiFi.h>
 #include <ESP_Mail_Client.h>
 
-//Test
-
 /*
 TODO:
 Turn on the water pump
@@ -39,9 +37,9 @@ static bool tempEmailSent = false;
 
 // For the subject and text field of what is sent to the Recipent's email
 
-const char* SUBJECTS[] = {"⚠️⚠️⚠️ERROR⚠️⚠️⚠️", "Warning: Plant temperature out of range", "Warning: Plant temperature out of range", "Warning: Low water level"};
+const char* SUBJECTS[] PROGMEM = {"ERROR", "Warning: Plant temperature out of range", "Warning: Plant temperature out of range", "Warning: Low water level"};
 
-const char* TEXTS[] = {"ERROR occured 🦖, device has shutdown, manual fix required. Watch out for the dinosaur! 🦖", 
+const char* TEXTS[] PROGMEM  = {"ERROR occured, device has shutdown, manual fix required. Watch out for the dinosaur!", 
   "Plant's environment is too hot, this could damage the plant or kill the plant.", 
   "Plant's environment is too cold, this could damage the plant or kill the plant.", 
   "Device is running out of water, please fill the reserviour. "};
@@ -63,7 +61,7 @@ SMTPSession smtp;
 
 // Forward declarations
 void wifiStart();
-void emailSend(String, String);
+void emailSend(const char*, const char*);   // using const char* to reduce space
 void checkWaterLevel();
 void ledInit();
 void setLeds(ReservoirState_t state);
@@ -98,7 +96,7 @@ void wifiStart()
   }
 }
 
-void emailSend(String subject, String textMesssage)
+void emailSend(const char* subject, const char* textMesssage)
 {
   // Send email after connecting to WiFi
   MailClient.networkReconnect(true);
@@ -111,9 +109,9 @@ void emailSend(String subject, String textMesssage)
   config.login.password = AUTHOR_PASSWORD;
   config.login.user_domain = "";
 
-  config.time.ntp_server = "pool.ntp.org,time.nist.gov";
-  config.time.gmt_offset = 3;
-  config.time.day_light_offset = 0;
+  // config.time.ntp_server = "pool.ntp.org,time.nist.gov"; // In theory shouldn't need NTP time as no scheduling should occur
+  // config.time.gmt_offset = 3;
+  // config.time.day_light_offset = 0;
 
   SMTP_Message message;   // Configure the message that is going to be sent
 
@@ -141,7 +139,7 @@ void emailSend(String subject, String textMesssage)
   }
   else{
     if (smtp.isAuthenticated())
-      Serial.println("\nSuccessfully logged in.");
+      Serial.println("\nSuccessfully logged in.");        // is this needed?
     else
       Serial.println("\nConnected with no Auth.");
   }
