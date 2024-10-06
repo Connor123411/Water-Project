@@ -14,7 +14,7 @@ Check Water level
 // Pin define
 #define GREEN_LED 23
 #define RED_LED 18
-#define WATER_SWITCH 2 
+#define WATER_SWITCH 2
 
 
 // WiFi credentials
