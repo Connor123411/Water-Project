@@ -1,4 +1,3 @@
-#include <Arduino.h>
 #include <WiFi.h>
 #include <ESP_Mail_Client.h>
 
@@ -15,6 +14,8 @@ Check Water level
 #define GREEN_LED 23
 #define RED_LED 18
 #define WATER_SWITCH 2
+#define SOIL_PIN 12
+#define PUMP_CONTROL 14
 
 
 // WiFi credentials
@@ -27,7 +28,7 @@ Check Water level
 // Email credentials
 #define AUTHOR_EMAIL "esp32waterthing@gmail.com" // Sender email address
 #define AUTHOR_PASSWORD "lbls clbf dlhd gseb" // Sender application password 
-#define RECIPENT_EMAIL "esp32waterthing@gmail.com" // Recipent email, password for gmail account 1password123
+#define RECIPENT_EMAIL "connorfleming57@gmail.com" // Recipent email, password for gmail account 1password123
 
 // Static variables
 static bool waterEmailSent = false;
@@ -36,12 +37,12 @@ static bool tempEmailSent = false;
 
 // For the subject and text field of what is sent to the Recipent's email
 
-const char* SUBJECTS[] = {"⚠️⚠️⚠️ERROR⚠️⚠️⚠️", "Warning: Plant temperature out of range", "Warning: Low water level"};
+const char* SUBJECTS[] = {"⚠️⚠️⚠️ERROR⚠️⚠️⚠️", "Warning: Plant temperature out of range", "Warning: Plant temperature out of range", "Warning: Low water level"};
 
 const char* TEXTS[] = {"ERROR occured 🦖, device has shutdown, manual fix required. Watch out for the dinosaur! 🦖", 
   "Plant's environment is too hot, this could damage the plant or kill the plant.", 
   "Plant's environment is too cold, this could damage the plant or kill the plant.", 
-  "Device is running out of water, please fill the reviour. "};
+  "Device is running out of water, please fill the reserviour. "};
 
 typedef enum {
   ERROR = 0,
@@ -65,20 +66,24 @@ void checkWaterLevel();
 void ledInit();
 void setLeds(ReservoirState_t state);
 void waterSwitchInit();
+void pumpInit();
 
 
 void setup() 
 {
   Serial.begin(115200);
   wifiStart(); // call the wifi start function
+  Serial.println("Wifi Connected");
   ledInit();
-  void waterSwitchInit();
+  waterSwitchInit();
+  pumpInit();
 }
 
 void loop()
 {
   checkWaterLevel();
-  delay(1200000); // Delay 20 minutes before updating
+  Serial.println(checkMoisture());
+  delay(500); // Delay 20 minutes before updating
 }
 
 
@@ -104,16 +109,16 @@ void emailSend(String subject, String textMesssage)
   config.login.password = AUTHOR_PASSWORD;
   config.login.user_domain = "";
 
-  config.time.ntp_server = F("pool.ntp.org,time.nist.gov");
+  config.time.ntp_server = "pool.ntp.org,time.nist.gov";
   config.time.gmt_offset = 3;
   config.time.day_light_offset = 0;
 
   SMTP_Message message;   // Configure the message that is going to be sent
 
-  message.sender.name = F("ESP32");
+  message.sender.name = "ESP32";
   message.sender.email = AUTHOR_EMAIL;
   message.subject = subject;
-  message.addRecipient(F("User"), RECIPENT_EMAIL);
+  message.addRecipient("User", RECIPENT_EMAIL);
 
   message.text.content = textMesssage.c_str();
   message.text.charSet = "UTF-8";
@@ -148,7 +153,9 @@ void emailSend(String subject, String textMesssage)
 void ledInit()
 { //Initialises the LEDS
     pinMode(GREEN_LED, OUTPUT);
+    digitalWrite(GREEN_LED, LOW);
     pinMode(RED_LED, OUTPUT);
+    digitalWrite(RED_LED, LOW);
 }
 
 void setLeds(ReservoirState_t state)
@@ -174,9 +181,27 @@ void checkWaterLevel()
     if (!waterEmailSent) {
       emailSend(SUBJECTS[WATER], TEXTS[WATER]);
     }
+
     waterEmailSent = true;
   } else {
     setLeds(FULL);
     waterEmailSent = false;
   }
+}
+
+float checkMoisture() 
+
+{
+  uint16_t maxVal = 540; // this is an educated guess
+  uint16_t moistureAdc = analogRead(SOIL_PIN);
+  Serial.print("ADC VALUE: ");
+  Serial.println(moistureAdc);
+  float humidity = (moistureAdc / maxVal); // humidity as a percent
+  return humidity;
+}
+
+void pumpInit()
+{
+  pinMode(PUMP_CONTROL, OUTPUT);
+  digitalWrite(PUMP_CONTROL, HIGH);
 }
