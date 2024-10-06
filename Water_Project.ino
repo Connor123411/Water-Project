@@ -14,7 +14,7 @@ Check Water level
 #define GREEN_LED 23
 #define RED_LED 18
 #define WATER_SWITCH 2
-#define SOIL_PIN 12
+#define SOIL_PIN 32
 #define PUMP_CONTROL 14
 
 
@@ -37,9 +37,9 @@ static bool tempEmailSent = false;
 
 // For the subject and text field of what is sent to the Recipent's email
 
-const char* SUBJECTS[] PROGMEM = {"ERROR", "Warning: Plant temperature out of range", "Warning: Plant temperature out of range", "Warning: Low water level"};
+const char* SUBJECTS[] = {"⚠️⚠️⚠️ERROR⚠️⚠️⚠️", "Warning: Plant temperature out of range", "Warning: Plant temperature out of range", "Warning: Low water level"};
 
-const char* TEXTS[] PROGMEM  = {"ERROR occured, device has shutdown, manual fix required. Watch out for the dinosaur!", 
+const char* TEXTS[] = {"ERROR occured 🦖, device has shutdown, manual fix required. Watch out for the dinosaur! 🦖", 
   "Plant's environment is too hot, this could damage the plant or kill the plant.", 
   "Plant's environment is too cold, this could damage the plant or kill the plant.", 
   "Device is running out of water, please fill the reserviour. "};
@@ -139,7 +139,7 @@ void emailSend(const char* subject, const char* textMesssage)
   }
   else{
     if (smtp.isAuthenticated())
-      Serial.println("\nSuccessfully logged in.");        // is this needed?
+      Serial.println("\nSuccessfully logged in.");
     else
       Serial.println("\nConnected with no Auth.");
   }
