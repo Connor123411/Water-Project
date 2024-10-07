@@ -15,7 +15,7 @@ Check Water level
 #define RED_LED 18
 #define WATER_SWITCH 2
 #define SOIL_PIN 32
-#define PUMP_CONTROL 14
+#define PUMP_CONTROL 37
 
 
 // WiFi credentials
@@ -67,7 +67,8 @@ void ledInit();
 void setLeds(ReservoirState_t state);
 void waterSwitchInit();
 void pumpInit();
-
+void setPump();
+void runPumpCheck();
 
 void setup() 
 {
@@ -82,8 +83,8 @@ void setup()
 void loop()
 {
   checkWaterLevel();
-  Serial.println(checkMoisture());
-  delay(500); // Delay 20 minutes before updating
+  runPumpCheck();
+  delay(500); // Delay 500 ms
 }
 
 
@@ -109,9 +110,7 @@ void emailSend(const char* subject, const char* textMesssage)
   config.login.password = AUTHOR_PASSWORD;
   config.login.user_domain = "";
 
-  // config.time.ntp_server = "pool.ntp.org,time.nist.gov"; // In theory shouldn't need NTP time as no scheduling should occur
-  // config.time.gmt_offset = 3;
-  // config.time.day_light_offset = 0;
+  config.time.ntp_server = "0.nz.pool.ntp.org"; // In theory shouldn't need NTP time as no scheduling should occur
 
   SMTP_Message message;   // Configure the message that is going to be sent
 
@@ -120,7 +119,7 @@ void emailSend(const char* subject, const char* textMesssage)
   message.subject = subject;
   message.addRecipient("User", RECIPENT_EMAIL);
 
-  message.text.content = textMesssage.c_str();
+  message.text.content = textMesssage;
   message.text.charSet = "UTF-8";
   message.text.transfer_encoding = Content_Transfer_Encoding::enc_8bit;     // 8 bit encoding
   
@@ -177,6 +176,7 @@ void waterSwitchInit()
 void checkWaterLevel()
 {
   if (digitalRead(WATER_SWITCH)) {
+    setPump(false);
     setLeds(EMPTY);
     if (!waterEmailSent) {
       emailSend(SUBJECTS[WATER], TEXTS[WATER]);
@@ -192,10 +192,8 @@ void checkWaterLevel()
 float checkMoisture() 
 
 {
-  uint16_t maxVal = 540; // this is an educated guess
-  uint16_t moistureAdc = analogRead(SOIL_PIN);
-  Serial.print("ADC VALUE: ");
-  Serial.println(moistureAdc);
+  float maxVal = 3100;
+  float moistureAdc = analogRead(SOIL_PIN);
   float humidity = (moistureAdc / maxVal); // humidity as a percent
   return humidity;
 }
@@ -204,4 +202,27 @@ void pumpInit()
 {
   pinMode(PUMP_CONTROL, OUTPUT);
   digitalWrite(PUMP_CONTROL, HIGH);
+}
+
+void setPump(bool turnOn)
+{
+  if (turnOn) {
+    digitalWrite(PUMP_CONTROL, LOW);
+  } else {
+    digitalWrite(PUMP_CONTROL, HIGH);
+  }
+}
+
+void runPumpCheck()
+{
+  float humidity = checkMoisture();
+  if (!waterEmailSent && humidity <=0.7) {
+    uint16_t startTime = millis();
+    Serial.println("Dispensing Water");
+    while (millis()-startTime < 600 && !waterEmailSent) {
+      setPump(true);
+      checkWaterLevel();
+    }
+    setPump(false);
+  }
 }
