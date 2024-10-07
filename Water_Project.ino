@@ -15,7 +15,8 @@ Check Water level
 #define RED_LED 18
 #define WATER_SWITCH 2
 #define SOIL_PIN 32
-#define PUMP_CONTROL 37
+#define PUMP_CONTROL 19
+#define TEMPERATURE_SENSOR 4
 
 
 // WiFi credentials
@@ -69,6 +70,7 @@ void waterSwitchInit();
 void pumpInit();
 void setPump();
 void runPumpCheck();
+void checkTemperature();
 
 void setup() 
 {
@@ -84,6 +86,7 @@ void loop()
 {
   checkWaterLevel();
   runPumpCheck();
+  checkTemperature();
   delay(500); // Delay 500 ms
 }
 
@@ -201,15 +204,15 @@ float checkMoisture()
 void pumpInit()
 {
   pinMode(PUMP_CONTROL, OUTPUT);
-  digitalWrite(PUMP_CONTROL, HIGH);
+  digitalWrite(PUMP_CONTROL, LOW);
 }
 
 void setPump(bool turnOn)
 {
   if (turnOn) {
-    digitalWrite(PUMP_CONTROL, LOW);
-  } else {
     digitalWrite(PUMP_CONTROL, HIGH);
+  } else {
+    digitalWrite(PUMP_CONTROL, LOW);
   }
 }
 
@@ -217,12 +220,33 @@ void runPumpCheck()
 {
   float humidity = checkMoisture();
   if (!waterEmailSent && humidity <=0.7) {
-    uint16_t startTime = millis();
+    unsigned long startTime = millis();
     Serial.println("Dispensing Water");
-    while (millis()-startTime < 600 && !waterEmailSent) {
+    Serial.println(waterEmailSent);
+    while (millis()-startTime < 2500 && !waterEmailSent) {
       setPump(true);
       checkWaterLevel();
     }
     setPump(false);
   }
 }
+/*
+void checkTemperature()
+{
+  float temp = getTemperature();
+  if (temp > 40) {
+    //emailsend(SUBJECTS[1], TEXTS[1]);
+    continue;
+  } else if {
+    //emailsend(SUBJECTS[2], TEXTS[2]);
+    continue;
+  }
+}
+
+
+float getTemperature()
+{
+  float temperature = analogRead(TEMPERATURE_SENSOR) * 500 / 1023;
+  return temperature; 
+}
+*/
