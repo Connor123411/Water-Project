@@ -70,7 +70,7 @@ void waterSwitchInit();
 void pumpInit();
 void setPump();
 void runPumpCheck();
-void checkTemperature();
+// void checkTemperature();
 
 void setup() 
 {
@@ -86,7 +86,7 @@ void loop()
 {
   checkWaterLevel();
   runPumpCheck();
-  checkTemperature();
+  // checkTemperature();
   delay(500); // Delay 500 ms
 }
 
@@ -222,7 +222,6 @@ void runPumpCheck()
   if (!waterEmailSent && humidity <=0.7) {
     unsigned long startTime = millis();
     Serial.println("Dispensing Water");
-    Serial.println(waterEmailSent);
     while (millis()-startTime < 2500 && !waterEmailSent) {
       setPump(true);
       checkWaterLevel();
